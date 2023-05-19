@@ -1,82 +1,69 @@
 import {
   describe, expect, it, jest,
 } from '@jest/globals';
-import request from 'supertest';
-import app from '../../app.js';
+import Editora from '../../models/editora.js';
 
-let server;
-beforeEach(() => {
-  const port = 3000;
-  server = app.listen(port);
-});
+describe('Testando o modelo Editora', () => {
+  const objetoEditora = {
+    nome: 'CDC',
+    cidade: 'Sao Paulo',
+    email: 'c@c.com',
+  };
 
-afterEach(() => {
-  server.close();
-});
+  it('Deve instanciar uma nova editora', () => {
+    const editora = new Editora(objetoEditora);
 
-describe('GET em /editoras', () => {
-  it('Deve retornar uma lista de editoras', async () => {
-    const resposta = await request(app)
-      .get('/editoras')
-      .set('Accept', 'application/json')
-      .expect('content-type', /json/)
-      .expect(200);
-
-    expect(resposta.body[0].email).toEqual('e@e.com');
+    expect(editora).toEqual(
+      expect.objectContaining(objetoEditora),
+    );
   });
-});
 
-let idResposta;
-describe('POST em /editoras', () => {
-  it('Deve adicionar uma nova editora', async () => {
-    const resposta = await request(app)
-      .post('/editoras')
-      .send({
-        nome: 'CDC',
-        cidade: 'Sao Paulo',
-        email: 's@s.com',
-      })
-      .expect(201);
+  it.skip('Deve salvar editora no BD', () => {
+    const editora = new Editora(objetoEditora);
 
-    idResposta = resposta.body.content.id;
+    editora.salvar().then((dados) => {
+      expect(dados.nome).toBe('CDC');
+    });
   });
-  it('Deve nao adicionar nada ao passar o body vazio', async () => {
-    await request(app)
-      .post('/editoras')
-      .send({})
-      .expect(400);
+
+  it.skip('Deve salvar no BD usando a sintaxe moderna', async () => {
+    const editora = new Editora(objetoEditora);
+
+    const dados = await editora.salvar();
+
+    const retornado = await Editora.pegarPeloId(dados.id);
+
+    expect(retornado).toEqual(
+      expect.objectContaining({
+        id: expect.any(Number),
+        ...objetoEditora,
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
+      }),
+    );
   });
-});
 
-describe('GET em /editoras/id', () => {
-  it('Deve retornar recurso selecionado', async () => {
-    await request(app)
-      .get(`/editoras/${idResposta}`)
-      .expect(200);
-  });
-});
+  it('Deve fazer uma chamada simulada ao BD', () => {
+    const editora = new Editora(objetoEditora);
 
-describe('PUT em /editoras/id', () => {
-  test.each([
-    ['nome', { nome: 'Casa do Codigo' }],
-    ['cidade', { cidade: 'SP' }],
-    ['email', { email: 'cdc@cdc.com' }],
-  ])('Deve alterar o campo %s', async (chave, param) => {
-    const requisicao = { request };
-    const spy = jest.spyOn(requisicao, 'request');
-    await requisicao.request(app)
-      .put(`/editoras/${idResposta}`)
-      .send(param)
-      .expect(204);
+    editora.salvar = jest.fn().mockReturnValue({
+      id: 10,
+      nome: 'CDC',
+      cidade: 'Sao Paulo',
+      email: 'c@c.com',
+      created_at: '2022-10-01',
+      updated_at: '2022-10-01',
+    });
 
-    expect(spy).toHaveBeenCalled();
-  });
-});
+    const retorno = editora.salvar();
 
-describe('DELETE em /editoras/id', () => {
-  it('Deletar o recurso adcionado', async () => {
-    await request(app)
-      .delete(`/editoras/${idResposta}`)
-      .expect(204);
+    expect(retorno).toEqual(
+      expect.objectContaining({
+        id: expect.any(Number),
+        ...objetoEditora,
+        created_at: expect.any(String),
+        updated_at: expect.any(String),
+      }),
+    );
   });
 });

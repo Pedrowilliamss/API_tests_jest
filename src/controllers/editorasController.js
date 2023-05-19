@@ -24,12 +24,15 @@ class EditorasController {
     const { body } = req;
     const editora = new Editora(body);
     try {
-      if (Object.keys(body).length === 0) throw new Error('corpo da requisicao vazio');
-
+      if (Object.keys(body).length === 0) {
+        throw new Error('corpo da requisicao vaio');
+      }
       const resposta = await editora.salvar(editora);
       return res.status(201).json({ message: 'editora criada', content: resposta });
     } catch (err) {
-      if (err.message === 'corpo da requisicao vazio') return res.status(400).send(err.message);
+      if (err.message === 'corpo da requisicao vaio') {
+        return res.status(400).json(err.message);
+      }
       return res.status(500).json(err.message);
     }
   };
@@ -51,7 +54,7 @@ class EditorasController {
     const { params } = req;
     try {
       await Editora.excluir(params.id);
-      return res.status(204).json({ message: 'editora excluída' });
+      return res.status(200).json({ message: 'editora excluída' });
     } catch (err) {
       return res.status(500).json(err.message);
     }

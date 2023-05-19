@@ -1,6 +1,8 @@
-import { afterEach, beforeEach } from '@jest/globals';
 import request from 'supertest';
-import app from '../../app';
+import {
+  describe, expect, it, jest,
+} from '@jest/globals';
+import app from '../../app.js';
 
 let server;
 beforeEach(() => {
@@ -23,6 +25,7 @@ describe('GET em /editoras', () => {
     expect(resposta.body[0].email).toEqual('e@e.com');
   });
 });
+
 let idResposta;
 describe('POST em /editoras', () => {
   it('Deve adicionar uma nova editora', async () => {
@@ -34,6 +37,7 @@ describe('POST em /editoras', () => {
         email: 's@s.com',
       })
       .expect(201);
+
     idResposta = resposta.body.content.id;
   });
   it('Deve nao adicionar nada ao passar o body vazio', async () => {
@@ -45,24 +49,32 @@ describe('POST em /editoras', () => {
 });
 
 describe('GET em /editoras/id', () => {
-  it('deve retornar o recurso selecionado', async () => {
+  it('Deve retornar recurso selecionado', async () => {
     await request(app)
-      .delete(`/editoras/${idResposta}`)
+      .get(`/editoras/${idResposta}`)
       .expect(200);
   });
 });
 
 describe('PUT em /editoras/id', () => {
-  it('Deve alterar o campo nome', async () => {
-    await request(app)
+  test.each([
+    ['nome', { nome: 'Casa do Codigo' }],
+    ['cidade', { cidade: 'SP' }],
+    ['email', { email: 'cdc@cdc.com' }],
+  ])('Deve alterar o campo %s', async (chave, param) => {
+    const requisicao = { request };
+    const spy = jest.spyOn(requisicao, 'request');
+    await requisicao.request(app)
       .put(`/editoras/${idResposta}`)
-      .send({ nome: 'Casa do Codigo' })
+      .send(param)
       .expect(204);
+
+    expect(spy).toHaveBeenCalled();
   });
 });
 
 describe('DELETE em /editoras/id', () => {
-  it('Deleta o recurso adcionado', async () => {
+  it('Deletar o recurso adcionado', async () => {
     await request(app)
       .delete(`/editoras/${idResposta}`)
       .expect(200);
