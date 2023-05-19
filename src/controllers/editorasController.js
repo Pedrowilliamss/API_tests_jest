@@ -24,15 +24,12 @@ class EditorasController {
     const { body } = req;
     const editora = new Editora(body);
     try {
-      if (Object.keys(body).length === 0) {
-        throw new Error('corpo da requisicao vaio');
-      }
+      if (Object.keys(body).length === 0) throw new Error('corpo da requisicao vazio');
+
       const resposta = await editora.salvar(editora);
       return res.status(201).json({ message: 'editora criada', content: resposta });
     } catch (err) {
-      if (err.message === 'corpo da requisicao vaio') {
-        return res.status(400).json(err.message);
-      }
+      if (err.message === 'corpo da requisicao vazio') return res.status(400).send(err.message);
       return res.status(500).json(err.message);
     }
   };
